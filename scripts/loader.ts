@@ -1,20 +1,24 @@
-/// <reference path="./index.d.ts" />
+/// <reference path="./index.d.ts"/>
 
 import * as THREE from 'three'
 import * as GLTFLoader from 'three-gltf2-loader'
 GLTFLoader(THREE)
+
 declare module 'three' {
-export var GLTFLoader: any
+    export var GLTFLoader: any
 }
 
+import {GLTFScene} from './scenemanager';
+import {Scene} from './scenes'
+
 class Loader {
-    private _GTLFLoader = new THREE.GLTFLoader();
-    // private _FBXLoader = new THREE.FBXLoader();
-    private _manager = new THREE.LoadingManager();
+    GTLFLoader = new THREE.GLTFLoader();
+    // FBXLoader = new THREE.FBXLoader();
+    LoadingManager = new THREE.LoadingManager();
 
     constructor() {
          // loading manager progress setup
-         this._manager.onProgress = function(item, loaded, total){
+         this.LoadingManager.onProgress = function(item, loaded, total){
             console.log(item, loaded, total);
         }
 
@@ -31,21 +35,22 @@ class Loader {
     }
 
     // determine which loader to use
-    loadObject(url: string, func: (object: any) => void) : void {
-        if ((url).endsWith(".fbx")){
-            // load fbx
-        } else if ((url).endsWith("glb")){
-            this.loadGLTF(url, func);
-        }
+    // loadObject(obj : any, func: (object: any) => void) : void {
+    //     if ((obj.url).endsWith(".fbx")){
+    //         // load fbx
+    //     } else if ((obj.url).endsWith("glb")){
+    //         this.loadGLTF(obj, func);
+    //     }
 
-    }
+    // }
 
-    loadGLTF(url: string, func: (object: any) => void) : any {
-        this._GTLFLoader.load(url, function(data : any){
-            console.log(data);
+    loadGLTF(url: string, func: (sceneData : GLTFScene) => void) : any {
+        this.GTLFLoader.load(url, function(data : any){
             func(data);
         })
     }
+
+
 }
 
 export {Loader}

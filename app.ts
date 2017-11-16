@@ -243,6 +243,7 @@ class CameraController{
 
     changeCamera(camera : THREE.Camera){
         this.currentCamera = camera;
+        console.log(camera);
     }
 
     update(){
@@ -251,22 +252,60 @@ class CameraController{
 }
 
 class SceneController{
-    currentSceneObject : Scene;
-    currentScene : THREE.Scene;
+    parent : Game;
+    loader : Loader;
     
-    mixer: THREE.AnimationMixer;
+    sceneData :GLTFScene;
+    currentScene : THREE.Scene;
+    mixer : THREE.AnimationMixer;
     clock : THREE.Clock;
+
+    previousSceneIndex : number;
+    nextSceneIndex : number;
+
+    currentSceneIndex : number = -1;
+    gameScenes = GameScenes;
     multiplier = 2;
 
     constructor(game: Game){
+        this.parent = game;
+        this.loader = new Loader();
         this.currentScene = new THREE.Scene();
-        this.mixer = new THREE.AnimationMixer(game);
+        this.mixer = new THREE.AnimationMixer(this.parent);
         this.clock = new THREE.Clock();
     }
 
-    changeScene(nextScene : Scene){
-        this.currentSceneObject = nextScene;
-        this.currentScene = nextScene.loadedObj.scene;
+    loadNext(){
+        // called from Game object
+        this.nextSceneIndex = this.currentSceneIndex + 1;
+        var nextScene = this.gameScenes[this.nextSceneIndex];
+        this.loader.loadGLTF(nextScene.sceneUrl, this.showScene.bind(this));
+    }
+
+    showScene(sceneData : GLTFScene){
+        // callback function from loader.loadGTLF
+        this.previousSceneIndex = this.currentSceneIndex;
+        this.currentSceneIndex = this.nextSceneIndex;
+
+        // swap the scenes
+        this.sceneData = sceneData;
+        this.currentScene = sceneData.scene;
+
+        // add some hemispheric lighting
+        var hemisphereLight =  new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 );
+        this.currentScene.add(hemisphereLight);
+
+        // call back to gmae
+        this.parent.sceneLoaded(sceneData);
+    }
+
+    playAnimation(){
+        if(this.sceneData.animations.length){
+            var anim = this.sceneData.animations[0]
+            this.mixer.clipAction(anim).clampWhenFinished = true;
+            this.mixer.clipAction(anim).setLoop(THREE.LoopOnce, 0);
+            this.mixer.clipAction(anim).play();
+        }
     }
 
     update(){
@@ -275,20 +314,32 @@ class SceneController{
 }
 
 class Game{
-    gameScenes = GameScenes;
-    
+    container : HTMLDivElement;
     renderer : THREE.WebGLRenderer;
-
     cameraController : CameraController;
     sceneController : SceneController;
-    objectLoader: Loader;
-
 
     constructor(){
         this.renderer = new THREE.WebGLRenderer();
         this.cameraController = new CameraController();
         this.sceneController = new SceneController(this);
+
+        this.container = document.createElement('div');
+        document.body.appendChild(this.container);
+        
+        // this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(1024, 768);
+        this.container.appendChild(this.renderer.domElement);
+        
+        this.sceneController.loadNext();
         this.render();
+    }
+
+    sceneLoaded(sceneData : GLTFScene){
+        // called from sceneController.showScene
+        // change the camera
+        this.cameraController.changeCamera(sceneData.cameras[0]);
+        this.sceneController.playAnimation();
     }
 
     private render(){
@@ -303,5 +354,5 @@ class Game{
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    let game = new Game();
+    let game = new Game()
 });

@@ -12,5 +12,5 @@ let SceneTwo = {
     active: false,
     sceneUrl: 'models/scenes/wobble.glb'
 };
-let GameScenes = [SceneOne, SceneTwo];
+var GameScenes = [SceneOne, SceneTwo];
 exports.GameScenes = GameScenes;

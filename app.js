@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 const THREE = require("three");
+const loader_1 = require("./scripts/loader");
 const scenes_1 = require("./scripts/scenes");
 // interface GameObject {
 //     name: string;
@@ -185,20 +186,48 @@ class CameraController {
     }
     changeCamera(camera) {
         this.currentCamera = camera;
+        console.log(camera);
     }
     update() {
     }
 }
 class SceneController {
     constructor(game) {
+        this.currentSceneIndex = -1;
+        this.gameScenes = scenes_1.GameScenes;
         this.multiplier = 2;
+        this.parent = game;
+        this.loader = new loader_1.Loader();
         this.currentScene = new THREE.Scene();
-        this.mixer = new THREE.AnimationMixer(game);
+        this.mixer = new THREE.AnimationMixer(this.parent);
         this.clock = new THREE.Clock();
     }
-    changeScene(nextScene) {
-        this.currentSceneObject = nextScene;
-        this.currentScene = nextScene.loadedObj.scene;
+    loadNext() {
+        // called from Game object
+        this.nextSceneIndex = this.currentSceneIndex + 1;
+        var nextScene = this.gameScenes[this.nextSceneIndex];
+        this.loader.loadGLTF(nextScene.sceneUrl, this.showScene.bind(this));
+    }
+    showScene(sceneData) {
+        // callback function from loader.loadGTLF
+        this.previousSceneIndex = this.currentSceneIndex;
+        this.currentSceneIndex = this.nextSceneIndex;
+        // swap the scenes
+        this.sceneData = sceneData;
+        this.currentScene = sceneData.scene;
+        // add some hemispheric lighting
+        var hemisphereLight = new THREE.HemisphereLight(0xffffbb, 0x080820, 1);
+        this.currentScene.add(hemisphereLight);
+        // call back to gmae
+        this.parent.sceneLoaded(sceneData);
+    }
+    playAnimation() {
+        if (this.sceneData.animations.length) {
+            var anim = this.sceneData.animations[0];
+            this.mixer.clipAction(anim).clampWhenFinished = true;
+            this.mixer.clipAction(anim).setLoop(THREE.LoopOnce, 0);
+            this.mixer.clipAction(anim).play();
+        }
     }
     update() {
         this.mixer.update(this.clock.getDelta() * this.multiplier);
@@ -209,7 +238,19 @@ class Game {
         this.renderer = new THREE.WebGLRenderer();
         this.cameraController = new CameraController();
         this.sceneController = new SceneController(this);
+        this.container = document.createElement('div');
+        document.body.appendChild(this.container);
+        // this.renderer.setPixelRatio(window.devicePixelRatio);
+        this.renderer.setSize(1024, 768);
+        this.container.appendChild(this.renderer.domElement);
+        this.sceneController.loadNext();
         this.render();
+    }
+    sceneLoaded(sceneData) {
+        // called from sceneController.showScene
+        // change the camera
+        this.cameraController.changeCamera(sceneData.cameras[0]);
+        this.sceneController.playAnimation();
     }
     render() {
         this.cameraController.update();
@@ -220,5 +261,4 @@ class Game {
 }
 window.addEventListener('DOMContentLoaded', () => {
     let game = new Game();
-    console.log(scenes_1.GameScenes);
 });
