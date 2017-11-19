@@ -31,7 +31,7 @@ class SceneController {
     loadNext(){
         var nextScene = GameScenes[this.idx + 1];
         if (nextScene){
-            this.loader.loadGLTF(nextScene.sceneUrl, this.changeScene.bind(this));
+            this.loader.loadScene(nextScene.sceneUrl, this.changeScene.bind(this));
         }
     }
 
