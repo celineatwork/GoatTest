@@ -12,21 +12,38 @@ class SceneController {
 
     loader : Loader;
 
+    idx : number = -1;
+
     constructor(){
+        // THREE initializations
         this.scene = new THREE.Scene();
         this.camera = new THREE.Camera();
         this.mixer = new THREE.AnimationMixer(this.scene);
         this.clock = new THREE.Clock();
+        
+        // custom class initializations
+        this.loader = new Loader();
 
         // add some lighting
         this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
     }
 
+    loadNext(){
+        var nextScene = GameScenes[this.idx + 1];
+        if (nextScene){
+            this.loader.loadGLTF(nextScene.sceneUrl, this.changeScene.bind(this));
+        }
+    }
+
     changeScene(sceneData : any){
+        // add scene and change camera
         this.scene.add(sceneData.scene);
         this.camera = sceneData.cameras[0];
 
+        // set up scene animation
         var anim = sceneData.animations[0];
+        this.mixer.clipAction(anim).clampWhenFinished = true;
+        this.mixer.clipAction(anim).setLoop(THREE.LoopOnce, 0);
         this.mixer.clipAction(anim).play();
     }
 
@@ -40,20 +57,22 @@ class Game {
     renderer : THREE.WebGLRenderer;
 
     sceneController : SceneController;
-    loader : Loader;
 
     constructor(){
-        this.sceneController = new SceneController();
+        // THREE initializations
         this.renderer = new THREE.WebGLRenderer();
-        this.loader = new Loader();
 
+        // custom class initializations
+        this.sceneController = new SceneController();
+
+        // add dom element
         this.container = document.createElement('div');
         document.body.appendChild(this.container);
         this.renderer.setSize(1024, 768);
         this.container.appendChild(this.renderer.domElement);
 
-        this.loader.loadGLTF('models/scenes/anim-test-trees.glb', this.sceneController.changeScene.bind(this.sceneController));
-        
+        // load the first scene
+        this.sceneController.loadNext();        
         this.render();
     }
 
