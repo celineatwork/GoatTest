@@ -44,12 +44,15 @@ class Loader {
 
     // }
 
+    async loadScene(url: string, func: (sceneData : GLTFScene) => void){
+        this.loadGLTF(url, func);
+    }
+
     loadGLTF(url: string, func: (sceneData : GLTFScene) => void) : any {
         this.GTLFLoader.load(url, function(data : any){
             func(data);
         })
     }
-
 
 }
 
