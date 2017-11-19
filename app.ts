@@ -4,40 +4,25 @@ import {GLTFScene} from './scripts/scenemanager';
 import {Loader} from './scripts/loader';
 import {Scene, GameScenes} from './scripts/scenes'
 
-class Game {
-    container : HTMLDivElement;
-
-    renderer : THREE.WebGLRenderer;
+class SceneController {
     scene : THREE.Scene;
     camera : THREE.Camera;
-
     mixer : THREE.AnimationMixer;
     clock : THREE.Clock;
 
     loader : Loader;
 
     constructor(){
-        this.renderer = new THREE.WebGLRenderer();
         this.scene = new THREE.Scene();
         this.camera = new THREE.Camera();
         this.mixer = new THREE.AnimationMixer(this.scene);
         this.clock = new THREE.Clock();
 
+        // add some lighting
         this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
-
-        this.container = document.createElement('div');
-        document.body.appendChild(this.container);
-        this.renderer.setSize(1024, 768);
-        this.container.appendChild(this.renderer.domElement);
-
-        this.loader = new Loader();
-        this.loader.loadGLTF('models/scenes/anim-test-trees.glb', this.loadScene.bind(this));
-        
-        this.render();
     }
 
-    loadScene(sceneData : any){
-        console.log(sceneData);
+    changeScene(sceneData : any){
         this.scene.add(sceneData.scene);
         this.camera = sceneData.cameras[0];
 
@@ -45,9 +30,37 @@ class Game {
         this.mixer.clipAction(anim).play();
     }
 
-    private render(){
+    update(){
         this.mixer.update(this.clock.getDelta());
-        this.renderer.render(this.scene, this.camera);
+    }
+}
+
+class Game {
+    container : HTMLDivElement;
+    renderer : THREE.WebGLRenderer;
+
+    sceneController : SceneController;
+    loader : Loader;
+
+    constructor(){
+        this.sceneController = new SceneController();
+        this.renderer = new THREE.WebGLRenderer();
+        this.loader = new Loader();
+
+        this.container = document.createElement('div');
+        document.body.appendChild(this.container);
+        this.renderer.setSize(1024, 768);
+        this.container.appendChild(this.renderer.domElement);
+
+        this.loader.loadGLTF('models/scenes/anim-test-trees.glb', this.sceneController.changeScene.bind(this.sceneController));
+        
+        this.render();
+    }
+
+    private render(){
+        this.sceneController.update();
+
+        this.renderer.render(this.sceneController.scene, this.sceneController.camera);
         requestAnimationFrame(this.render.bind(this));
     }
 }
