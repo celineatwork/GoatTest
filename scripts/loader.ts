@@ -34,22 +34,13 @@ class Loader {
         };
     }
 
-    // determine which loader to use
-    // loadObject(obj : any, func: (object: any) => void) : void {
-    //     if ((obj.url).endsWith(".fbx")){
-    //         // load fbx
-    //     } else if ((obj.url).endsWith("glb")){
-    //         this.loadGLTF(obj, func);
-    //     }
-
-    // }
-
-    async loadScene(url: string, func: (sceneData : GLTFScene) => void){
-        this.loadGLTF(url, func);
-    }
-
-    loadGLTF(url: string, func: (sceneData : GLTFScene) => void) : any {
+    async loadScene(url: string, func: (sceneData : GLTFScene) => GLTFScene){
         this.GTLFLoader.load(url, function(data : any){
+            // if (data instanceof GLTFScene){
+            //     func(data);
+            // } else {
+            //     console.log(data);
+            // }
             func(data);
         })
     }

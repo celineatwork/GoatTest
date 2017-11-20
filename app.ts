@@ -10,11 +10,14 @@ class SceneController {
     mixer : THREE.AnimationMixer;
     clock : THREE.Clock;
 
+    parent : Game;
     loader : Loader;
 
     idx : number = -1;
 
-    constructor(){
+    constructor(parent: Game){
+        var self = this;
+
         // THREE initializations
         this.scene = new THREE.Scene();
         this.camera = new THREE.Camera();
@@ -23,9 +26,15 @@ class SceneController {
         
         // custom class initializations
         this.loader = new Loader();
+        this.parent = parent;
 
         // add some lighting
         this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
+
+        // bindings
+        this.mixer.addEventListener("finished", function(e){
+            self.parent.changeScene();
+        })
     }
 
     loadNext(){
@@ -35,7 +44,7 @@ class SceneController {
         }
     }
 
-    changeScene(sceneData : any){
+    changeScene(sceneData : GLTFScene){
         // add scene and change camera
         this.scene.add(sceneData.scene);
         this.camera = sceneData.cameras[0];
@@ -48,8 +57,67 @@ class SceneController {
     }
 
     update(){
-        this.mixer.update(this.clock.getDelta());
+        this.mixer.update(this.clock.getDelta() * 3);
     }
+}
+
+class FrameController{
+    parent : Game;
+    container : HTMLDivElement;
+    overlay_1 : HTMLDivElement;
+    currentFrame : HTMLCanvasElement;
+    targetWidth : number;
+    targetHeight : number;
+    
+    sizingFactor : number = 0.1;
+
+    constructor(parent : Game){
+        this.parent = parent;
+        this.currentFrame = this.parent.renderer.domElement;
+
+        this.targetWidth = window.innerWidth;
+        this.targetHeight = window.innerWidth/2;
+
+        this.container = document.createElement('div');
+        this.overlay_1 = document.createElement('div')
+        this.parent.renderer.setSize(this.targetWidth, this.targetHeight);
+        
+        // this.container.appendChild(this.overlay_1);
+        this.container.appendChild(this.currentFrame);
+
+        this.overlay_1.style.width = window.innerWidth.toString() + "px";
+        this.overlay_1.style.height = (window.innerHeight/2).toString() + "px";
+        this.overlay_1.className = "overlay"
+        
+        document.body.appendChild(this.container);
+    }
+
+    changeScene(){
+        var scale = 100;
+        this.overlay_1.className = "overlay paused";
+        
+        var size = this.parent.renderer.getSize();
+        this.targetWidth = size.width - scale;
+        this.targetHeight= size.height -scale/2;
+        this.sizingFactor = 0.1;
+    }
+
+    checkSize(){
+        var size = this.parent.renderer.getSize();
+        if(this.targetWidth != size.width || this.targetHeight != size.height){
+            var wDiff = (this.targetWidth - size.width) * this.sizingFactor;
+            var hDiff = (this.targetHeight - size.height) * this.sizingFactor;
+
+            // console.log(size.width + wDiff, size.height + hDiff);
+            this.parent.renderer.setSize(size.width + wDiff, size.height + hDiff);
+            this.sizingFactor += 0.1;
+        }
+    }
+
+    update(){
+        this.checkSize();
+    }
+
 }
 
 class Game {
@@ -57,27 +125,28 @@ class Game {
     renderer : THREE.WebGLRenderer;
 
     sceneController : SceneController;
+    frameController : FrameController;
 
     constructor(){
         // THREE initializations
         this.renderer = new THREE.WebGLRenderer();
 
         // custom class initializations
-        this.sceneController = new SceneController();
-
-        // add dom element
-        this.container = document.createElement('div');
-        document.body.appendChild(this.container);
-        this.renderer.setSize(1024, 768);
-        this.container.appendChild(this.renderer.domElement);
+        this.sceneController = new SceneController(this);
+        this.frameController = new FrameController(this);
 
         // load the first scene
         this.sceneController.loadNext();        
         this.render();
     }
 
+    changeScene(){
+        this.frameController.changeScene();
+    }
+
     private render(){
         this.sceneController.update();
+        this.frameController.update();
 
         this.renderer.render(this.sceneController.scene, this.sceneController.camera);
         requestAnimationFrame(this.render.bind(this));
