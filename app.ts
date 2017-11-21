@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import {GLTFScene} from './scripts/scenemanager';
 import {Loader} from './scripts/loader';
 import {Scene, GameScenes} from './scripts/scenes'
+import { WebGLRenderer } from 'three';
 
 class SceneController {
     scene : THREE.Scene;
@@ -32,9 +33,9 @@ class SceneController {
         this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
 
         // bindings
-        this.mixer.addEventListener("finished", function(e){
-            self.parent.changeScene();
-        })
+        // this.mixer.addEventListener("finished", function(e){
+        //     self.parent.changeScene();
+        // })
     }
 
     loadNext(){
@@ -61,75 +62,83 @@ class SceneController {
     }
 }
 
-class FrameController{
-    parent : Game;
+class Frame{
+    renderer : WebGLRenderer;
     container : HTMLDivElement;
-    overlay_1 : HTMLDivElement;
-    currentFrame : HTMLCanvasElement;
+    overlay : HTMLDivElement;
+
     targetWidth : number;
     targetHeight : number;
-    
     sizingFactor : number = 0.1;
 
-    constructor(parent : Game){
-        this.parent = parent;
-        this.currentFrame = this.parent.renderer.domElement;
-
-        this.targetWidth = window.innerWidth;
-        this.targetHeight = window.innerWidth/2;
-
+    constructor (){
+        this.renderer = new WebGLRenderer();
         this.container = document.createElement('div');
-        this.overlay_1 = document.createElement('div')
-        this.parent.renderer.setSize(this.targetWidth, this.targetHeight);
-        
-        // this.container.appendChild(this.overlay_1);
-        this.container.appendChild(this.currentFrame);
+        this.overlay = document.createElement('div');
 
-        this.overlay_1.style.width = window.innerWidth.toString() + "px";
-        this.overlay_1.style.height = (window.innerHeight/2).toString() + "px";
-        this.overlay_1.className = "overlay"
-        
-        document.body.appendChild(this.container);
+        // container has a canvas and an overlay
+        this.container.className = "frame hidden";
+        this.container.appendChild(this.renderer.domElement)
+        this.container.appendChild(this.overlay);
     }
 
-    changeScene(){
-        var scale = 100;
-        this.overlay_1.className = "overlay paused";
-        
-        var size = this.parent.renderer.getSize();
-        this.targetWidth = size.width - scale;
-        this.targetHeight= size.height -scale/2;
-        this.sizingFactor = 0.1;
+    makeActive(){
+        this.container.className = "frame active";
+        this.targetWidth = window.innerWidth;
+        this.targetHeight = window.innerWidth / 2;
     }
 
-    checkSize(){
-        var size = this.parent.renderer.getSize();
-        if(this.targetWidth != size.width || this.targetHeight != size.height){
-            var wDiff = (this.targetWidth - size.width) * this.sizingFactor;
-            var hDiff = (this.targetHeight - size.height) * this.sizingFactor;
-
-            // console.log(size.width + wDiff, size.height + hDiff);
-            this.parent.renderer.setSize(size.width + wDiff, size.height + hDiff);
-            this.sizingFactor += 0.1;
-        }
+    makeInactive(){
+        this.container.className = "frame hidden";
     }
 
     update(){
-        this.checkSize();
+        
+    }
+}
+
+class FrameController{
+    parent : Game;
+    frames : Frame[];
+
+    container : HTMLDivElement;
+    activeFrame : Frame;
+
+    fCount : number = 5;
+
+    constructor(parent : Game){
+        this.parent = parent;
+        this.frames = new Array<Frame>();
+
+        // make a div container that holds all the frames
+        this.container = document.createElement('div');
+        this.container.className = "frameController";
+        this.parent.container.appendChild(this.container);
+
+        for (var i=0; i<this.fCount; i++){
+            var f = new Frame()
+            this.container.appendChild(f.container);
+            this.frames.push(f);
+        }
+
+        this.activeFrame = this.frames[0];
+        this.activeFrame.makeActive();
+    }
+
+    update(){
+
     }
 
 }
 
 class Game {
     container : HTMLDivElement;
-    renderer : THREE.WebGLRenderer;
-
     sceneController : SceneController;
     frameController : FrameController;
 
     constructor(){
-        // THREE initializations
-        this.renderer = new THREE.WebGLRenderer();
+        this.container = document.createElement('div');
+        document.body.appendChild(this.container);
 
         // custom class initializations
         this.sceneController = new SceneController(this);
@@ -140,15 +149,15 @@ class Game {
         this.render();
     }
 
-    changeScene(){
-        this.frameController.changeScene();
-    }
+    // changeScene(){
+    //     this.frameController.changeScene();
+    // }
 
     private render(){
         this.sceneController.update();
         this.frameController.update();
 
-        this.renderer.render(this.sceneController.scene, this.sceneController.camera);
+        this.frameController.activeFrame.renderer.render(this.sceneController.scene, this.sceneController.camera)
         requestAnimationFrame(this.render.bind(this));
     }
 }
