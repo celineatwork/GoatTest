@@ -23,33 +23,35 @@ SceneData.set("scene1", {
 SceneData.set("scene2", {
     name : "",
     sceneUrl : "models/scenes/wobble.glb",
-    thumbnailUrl : "assets/goat1.png",
+    thumbnailUrl : "assets/goat1.jpg",
     options :  ["scene3", "scene4", "scene5", "scene1"]
 })
 
 SceneData.set("scene3", {
     name : "",
     sceneUrl : "models/scenes/wobble.glb",
-    thumbnailUrl : "assets/goat2.png",
+    thumbnailUrl : "assets/goat2.jpg",
     options :  ["scene4", "scene5", "scene1", "scene2"]
 })
 
 SceneData.set("scene4", {
     name : "",
     sceneUrl : "models/scenes/wobble.glb",
-    thumbnailUrl : "assets/goat3.png",
+    thumbnailUrl : "assets/goat3.jpg",
     options :  ["scene5", "scene1", "scene2", "scene3"]
 })
 
 SceneData.set("scene5", {
     name : "",
     sceneUrl : "models/scenes/wobble.glb",
-    thumbnailUrl : "assets/goat4.png",
+    thumbnailUrl : "assets/goat4.jpg",
     options :  ["scene1", "scene2", "scene3", "scene4"]
 })
 
 class SceneController {
     scene : THREE.Scene;
+    sceneData : GLTFScene;
+
     camera : THREE.Camera;
     mixer : THREE.AnimationMixer;
     clock : THREE.Clock;
@@ -86,11 +88,17 @@ class SceneController {
         var scene = SceneData.get(title);
 
         if (scene){
+            // display thumbnails on tiles
+            this.parent.prepareScene(scene);
+
+            // load the scene object
             this.loader.loadScene(scene.sceneUrl, this.changeScene.bind(this));
         }
     }
 
     changeScene(sceneData : GLTFScene){
+        this.sceneData = sceneData;
+
         // add scene and change camera
         this.scene.add(sceneData.scene);
         this.camera = sceneData.cameras[0];
@@ -99,7 +107,17 @@ class SceneController {
         var anim = sceneData.animations[0];
         this.mixer.clipAction(anim).clampWhenFinished = true;
         this.mixer.clipAction(anim).setLoop(THREE.LoopOnce, 0);
-        this.mixer.clipAction(anim).play();
+        this.mixer.clipAction(anim).fadeIn(5);
+    }
+
+    playScene(){
+        console.log("play");
+        var anim = this.sceneData.animations[0];
+        
+        // give time for a fade
+        setTimeout(() => {
+            this.mixer.clipAction(anim).play();
+        }, 3000);
     }
 
     update(){
@@ -108,6 +126,8 @@ class SceneController {
 }
 
 class Frame{
+    game : Game;
+
     renderer : WebGLRenderer;
     container : HTMLDivElement;
     overlay : HTMLDivElement;
@@ -115,46 +135,66 @@ class Frame{
     targetWidth : number;
     targetHeight : number;
     sizingFactor : number = 0.1;
+    active : boolean = false;
 
-    constructor (){
+    constructor (game : Game){
+        this.game = game;
+
         this.renderer = new WebGLRenderer();
         this.container = document.createElement('div');
         this.overlay = document.createElement('div');
 
         // container has a canvas and an overlay
         this.container.className = "frame hidden";
+        this.overlay.className = "overlay";
         this.container.appendChild(this.renderer.domElement)
         this.container.appendChild(this.overlay);
+
+        // add rudimentary click method
+        this.overlay.addEventListener("click", function(){
+            game.playScene();
+        })
     }
 
     makeActive(){
         this.container.className = "frame active";
+        
         this.targetWidth = window.innerWidth;
         this.targetHeight = window.innerWidth / 2;
+        
         this.sizingFactor = 0.1
+        this.active = true;
     }
 
     makeInactive(){
         this.container.className = "frame hidden";
+        
         this.targetWidth = 300;
         this.targetHeight = 150;
+        
         this.sizingFactor = 0.1
+        this.active = false;
     }
 
     checkSize(){
-        var size = this.renderer.getSize();
-        if(this.targetWidth != size.width || this.targetHeight != size.height){
-            var wDiff = (this.targetWidth - size.width) * this.sizingFactor;
-            var hDiff = (this.targetHeight - size.height) * this.sizingFactor;
+        // var size = this.renderer.getSize();
+        // if(this.targetWidth != size.width || this.targetHeight != size.height){
+        //     var wDiff = (this.targetWidth - size.width) * this.sizingFactor;
+        //     var hDiff = (this.targetHeight - size.height) * this.sizingFactor;
 
-            // console.log(size.width + wDiff, size.height + hDiff);
-            this.renderer.setSize(size.width + wDiff, size.height + hDiff);
-            this.sizingFactor += 0.1;
-        }
+        //     // console.log(size.width + wDiff, size.height + hDiff);
+        //     this.renderer.setSize(size.width + wDiff, size.height + hDiff);
+        //     this.sizingFactor += 0.1;
+        // }
+    }
+
+    loadThumbnail(url : string){
+        console.log(url);
+        this.overlay.style.backgroundImage = "url(" + url;
     }
 
     update(){
-        this.checkSize();
+        // this.checkSize();
     }
 }
 
@@ -177,13 +217,27 @@ class FrameController{
         this.parent.container.appendChild(this.container);
 
         for (var i = 0; i < this.fCount; i++){
-            var f = new Frame()
+            var f = new Frame(parent)
             this.container.appendChild(f.container);
             this.frames.push(f);
         }
 
+        // make the first frame the active frame
         this.activeFrame = this.frames[0];
         this.activeFrame.makeActive();
+    }
+
+    prepareFrames(scene : Scene){
+        for (var i = 0; i < this.fCount; i++){
+            var frameObj = this.frames[i];
+            var sceneOption = SceneData.get(scene.options[i]);
+
+            if (!frameObj.active && sceneOption){
+                frameObj.loadThumbnail(sceneOption.thumbnailUrl);
+            }
+        }
+
+        this.activeFrame.loadThumbnail(scene.thumbnailUrl);
     }
 
     update(){
@@ -216,6 +270,17 @@ class Game {
     // changeScene(){
     //     this.frameController.changeScene();
     // }
+
+    prepareScene(scene : Scene){
+        // called from scenecontroller on scene load
+        // show thumbnails
+        this.frameController.prepareFrames(scene);
+
+    }
+
+    playScene(){
+        this.sceneController.playScene();
+    }
 
     private render(){
         this.sceneController.update();
