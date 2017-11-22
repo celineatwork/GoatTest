@@ -2,8 +2,51 @@ import * as THREE from 'three';
 
 import {GLTFScene} from './scripts/scenemanager';
 import {Loader} from './scripts/loader';
-import {Scene, GameScenes} from './scripts/scenes'
 import { WebGLRenderer } from 'three';
+
+interface Scene {
+    name : string, 
+    sceneUrl : string,
+    thumbnailUrl : string,
+    options : string[]
+}
+
+let SceneData : Map<string, Scene> = new Map<string, Scene>();
+
+SceneData.set("scene1", {
+    name : "",
+    sceneUrl : "models/scenes/anim-test-trees.glb",
+    thumbnailUrl : "assets/forest_concept_001.png",
+    options :  ["scene2", "scene3", "scene4", "scene5"]
+})
+
+SceneData.set("scene2", {
+    name : "",
+    sceneUrl : "models/scenes/wobble.glb",
+    thumbnailUrl : "assets/goat1.png",
+    options :  ["scene3", "scene4", "scene5", "scene1"]
+})
+
+SceneData.set("scene3", {
+    name : "",
+    sceneUrl : "models/scenes/wobble.glb",
+    thumbnailUrl : "assets/goat2.png",
+    options :  ["scene4", "scene5", "scene1", "scene2"]
+})
+
+SceneData.set("scene4", {
+    name : "",
+    sceneUrl : "models/scenes/wobble.glb",
+    thumbnailUrl : "assets/goat3.png",
+    options :  ["scene5", "scene1", "scene2", "scene3"]
+})
+
+SceneData.set("scene5", {
+    name : "",
+    sceneUrl : "models/scenes/wobble.glb",
+    thumbnailUrl : "assets/goat4.png",
+    options :  ["scene1", "scene2", "scene3", "scene4"]
+})
 
 class SceneController {
     scene : THREE.Scene;
@@ -14,7 +57,7 @@ class SceneController {
     parent : Game;
     loader : Loader;
 
-    idx : number = -1;
+    idx : number = 0;
 
     constructor(parent: Game){
         var self = this;
@@ -39,9 +82,11 @@ class SceneController {
     }
 
     loadNext(){
-        var nextScene = GameScenes[this.idx + 1];
-        if (nextScene){
-            this.loader.loadScene(nextScene.sceneUrl, this.changeScene.bind(this));
+        var title = "scene" + (this.idx+1).toString();
+        var scene = SceneData.get(title);
+
+        if (scene){
+            this.loader.loadScene(scene.sceneUrl, this.changeScene.bind(this));
         }
     }
 
@@ -86,14 +131,30 @@ class Frame{
         this.container.className = "frame active";
         this.targetWidth = window.innerWidth;
         this.targetHeight = window.innerWidth / 2;
+        this.sizingFactor = 0.1
     }
 
     makeInactive(){
         this.container.className = "frame hidden";
+        this.targetWidth = 300;
+        this.targetHeight = 150;
+        this.sizingFactor = 0.1
+    }
+
+    checkSize(){
+        var size = this.renderer.getSize();
+        if(this.targetWidth != size.width || this.targetHeight != size.height){
+            var wDiff = (this.targetWidth - size.width) * this.sizingFactor;
+            var hDiff = (this.targetHeight - size.height) * this.sizingFactor;
+
+            // console.log(size.width + wDiff, size.height + hDiff);
+            this.renderer.setSize(size.width + wDiff, size.height + hDiff);
+            this.sizingFactor += 0.1;
+        }
     }
 
     update(){
-        
+        this.checkSize();
     }
 }
 
@@ -115,7 +176,7 @@ class FrameController{
         this.container.className = "frameController";
         this.parent.container.appendChild(this.container);
 
-        for (var i=0; i<this.fCount; i++){
+        for (var i = 0; i < this.fCount; i++){
             var f = new Frame()
             this.container.appendChild(f.container);
             this.frames.push(f);
@@ -126,6 +187,9 @@ class FrameController{
     }
 
     update(){
+        for (let f of this.frames){
+            f.update();
+        }
 
     }
 

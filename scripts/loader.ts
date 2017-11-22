@@ -9,7 +9,7 @@ declare module 'three' {
 }
 
 import {GLTFScene} from './scenemanager';
-import {Scene} from './scenes'
+// import {Scene} from './scenes'
 
 class Loader {
     GTLFLoader = new THREE.GLTFLoader();
