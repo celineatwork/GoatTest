@@ -1,15 +1,12 @@
-/// <reference path="./index.d.ts"/>
+import THREE from './mythree'
 
-import * as THREE from 'three'
-import * as GLTFLoader from 'three-gltf2-loader'
-GLTFLoader(THREE)
-
-declare module 'three' {
-    export var GLTFLoader: any
+interface GLTFScene {
+    animations : Array<THREE.AnimationClip>;
+    cameras: Array<THREE.Camera>;
+    scenes: Array<THREE.Scene>;
+    scene : THREE.Scene;
 }
 
-import {GLTFScene} from './scenemanager';
-// import {Scene} from './scenes'
 
 class Loader {
     GTLFLoader = new THREE.GLTFLoader();
@@ -36,15 +33,10 @@ class Loader {
 
     async loadScene(url: string, func: (sceneData : GLTFScene) => GLTFScene){
         this.GTLFLoader.load(url, function(data : any){
-            // if (data instanceof GLTFScene){
-            //     func(data);
-            // } else {
-            //     console.log(data);
-            // }
             func(data);
         })
     }
 
 }
 
-export {Loader}
+export {GLTFScene, Loader}
