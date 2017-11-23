@@ -37,9 +37,9 @@ class SceneController {
         this.loader = new Loader();
 
         // call back when main scene animation is finished
-        // this.mixer.addEventListener("finished", function(e){
-        //     game.sceneFinished();
-        // })
+        this.mixer.addEventListener("finished", function(e){
+            game.sceneFinished();
+        })
     }
 
     loadNext(){

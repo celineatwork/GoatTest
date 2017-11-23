@@ -82,9 +82,19 @@
 			}
 
 			.options{
+				opacity: 0;
+				width: 140px;
+
 				position: absolute;
 				top: 0px;
 				right: 0px;
+
+				transform: translate(-10%, -110%);
+				transition: all 0.5s ease;
+			}
+
+			.options.active{
+				opacity: 1;
 
 				transform: translate(-10%, 0%);
 			}

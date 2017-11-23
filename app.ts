@@ -35,10 +35,11 @@ class Game {
     playScene(){
         this.frameController.playScene();
         this.sceneController.playScene();
+        this.textController.hideOptions();
     }
 
     sceneFinished(){    
-        console.log("animation finished");
+        this.textController.showOptions();
     }
 
     private render(){

@@ -36,6 +36,15 @@ class TextController {
             }
         }
     }
+    
+    showOptions(){
+        // called from game.sceneFinished
+        this.optionContainer.className += " active";
+    }
+
+    hideOptions(){
+        this.optionContainer.className.replace(" active", "");
+    }
 }
 
 class TextBox{
