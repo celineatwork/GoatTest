@@ -9,6 +9,7 @@ class Frame{
     renderer : WebGLRenderer;
     container : HTMLDivElement;
     overlay : HTMLDivElement;
+    data : Scene;
 
     targetWidth : number;
     targetHeight : number;
@@ -31,7 +32,7 @@ class Frame{
         // add rudimentary click method
         this.overlay.addEventListener("click", function(){
             game.playScene();
-        })
+        });
     }
 
     makeActive(){
@@ -50,6 +51,7 @@ class Frame{
         
         // this.targetWidth = 300;
         // this.targetHeight = 150;
+        this.renderer.setSize(0, 0);
         
         this.sizingFactor = 0.1
         this.active = false;
@@ -66,6 +68,11 @@ class Frame{
         //     this.sizingFactor += 0.1;
         // }
     // }
+
+    attachScene(scene : Scene){
+        this.data = scene;
+        this.loadThumbnail(this.data.thumbnailUrl);
+    }
 
     loadThumbnail(url : string){
         this.overlay.style.backgroundImage = "url(" + url;
@@ -113,11 +120,35 @@ class FrameController{
             var sceneOption = SceneData.get(scene.options[i]);
 
             if (!frameObj.active && sceneOption){
-                frameObj.loadThumbnail(sceneOption.thumbnailUrl);
+                frameObj.attachScene(sceneOption);
             }
         }
 
         this.activeFrame.loadThumbnail(scene.thumbnailUrl);
+    }
+
+    sceneSelected(sceneName: string){
+        for(var i = 0; i < this.game.maxOptionCount + 1; i++) {
+            var frameObj = this.frames[i];
+            if (frameObj.data){
+                console.log(frameObj.data.name);
+                
+                if (frameObj.data.name == sceneName){
+                    console.log(i);
+                    
+                    // make that frame active
+                    this.activeFrame.makeInactive();
+                    frameObj.makeActive();
+                    this.activeFrame = frameObj;
+                    break;
+                }
+            }
+        }
+
+        this.game.loadScene(this.activeFrame.data);
+    }
+
+    moveFrames(){
     }
 
     playScene(){

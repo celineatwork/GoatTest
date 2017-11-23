@@ -36,6 +36,9 @@ class SceneController {
         // custom class initializations
         this.loader = new Loader();
 
+        // add some lighting
+        this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
+
         // call back when main scene animation is finished
         this.mixer.addEventListener("finished", function(e){
             game.sceneFinished();
@@ -63,6 +66,10 @@ class SceneController {
         }
     }
 
+    sceneSelected(data: string){
+        
+    }
+
     changeScene(sceneData : GLTFScene){
         // called from loader as a callback
         this.sceneData = sceneData;
@@ -71,9 +78,6 @@ class SceneController {
         this.scene.add(sceneData.scene);
         this.camera = sceneData.cameras[0];
         
-        // add some lighting
-        this.scene.add(new THREE.HemisphereLight( 0xffffbb, 0x080820, 1 ));
-
         // set up scene animation
         var anim = sceneData.animations[0];
         this.mixer.clipAction(anim).clampWhenFinished = true;

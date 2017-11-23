@@ -43,7 +43,8 @@ class TextController {
     }
 
     hideOptions(){
-        this.optionContainer.className.replace(" active", "");
+        console.log("test");
+        this.optionContainer.className = "options";
     }
 }
 
@@ -61,7 +62,8 @@ class TextBox{
 
         this.container.className = "textbox";
         this.container.addEventListener("click", function(){
-            game.sceneController.loadScene(self.data);
+            // game.sceneController.loadScene(self.data);
+            game.sceneSelected(self.data);
         });
 
         this.container.appendChild(this.text);

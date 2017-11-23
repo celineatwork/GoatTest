@@ -3,7 +3,7 @@ import {Scene} from './sceneController';
 let SceneData : Map<string, Scene> = new Map<string, Scene>();
 
 SceneData.set("scene1", {
-    name : "",
+    name : "scene1",
     sceneUrl : "models/scenes/anim-test-trees.glb",
     thumbnailUrl : "assets/forest_concept_001.png",
     options :  ["scene2", "scene3", "scene4", "scene5"],
@@ -11,7 +11,7 @@ SceneData.set("scene1", {
 })
 
 SceneData.set("scene2", {
-    name : "",
+    name : "scene2",
     sceneUrl : "models/scenes/wobble.glb",
     thumbnailUrl : "assets/goat1.jpg",
     options :  ["scene3", "scene4", "scene5", "scene1"],
@@ -19,7 +19,7 @@ SceneData.set("scene2", {
 })
 
 SceneData.set("scene3", {
-    name : "",
+    name : "scene3",
     sceneUrl : "models/scenes/wobble.glb",
     thumbnailUrl : "assets/goat2.jpg",
     options :  ["scene4", "scene5", "scene1", "scene2"],
@@ -27,7 +27,7 @@ SceneData.set("scene3", {
 })
 
 SceneData.set("scene4", {
-    name : "",
+    name : "scene4",
     sceneUrl : "models/scenes/wobble.glb",
     thumbnailUrl : "assets/goat3.jpg",
     options :  ["scene5", "scene1", "scene2", "scene3"],
@@ -35,7 +35,7 @@ SceneData.set("scene4", {
 })
 
 SceneData.set("scene5", {
-    name : "",
+    name : "scene5",
     sceneUrl : "models/scenes/wobble.glb",
     thumbnailUrl : "assets/goat4.jpg",
     options :  ["scene1", "scene2", "scene3", "scene4"],

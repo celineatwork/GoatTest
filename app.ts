@@ -35,7 +35,16 @@ class Game {
     playScene(){
         this.frameController.playScene();
         this.sceneController.playScene();
+    }
+
+    sceneSelected(data: string){
+        this.frameController.sceneSelected(data);
         this.textController.hideOptions();
+    }
+
+    loadScene(scene : Scene){
+        this.sceneController.loadScene(scene.name);
+        this.prepareScene(scene);
     }
 
     sceneFinished(){    
